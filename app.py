@@ -217,7 +217,7 @@ with col_in:
 
     num_pcs = 0 
     if room_type == "Computer Lab":
-        num_pcs = st.number_input("💻 Active PCs", min_value=0, max_value=30, value=st.session_state.active_pcs)
+        num_pcs = st.number_input("💻 Active PCs", min_value=0, max_value=50, value=st.session_state.active_pcs)
         st.session_state.active_pcs = num_pcs
 
     st.markdown("<br>", unsafe_allow_html=True) 
