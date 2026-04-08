@@ -186,6 +186,13 @@ st.markdown("""
     div[data-testid="stMetricDelta"] {
         font-size: 0.85rem !important;
     }
+    
+    /* --- FIX FOR OVERSIZED SLIDER NUMBERS --- */
+    /* Targets the inner mechanics of the slider to shrink the min/max/current values back to normal */
+    div[data-baseweb="slider"] * {
+        font-size: 0.9rem !important; 
+        font-weight: 400 !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -368,8 +375,8 @@ with col_mid:
     
     m4, m5, m6 = st.columns(3)
     m4.metric("Current ₱", f"₱{monthly_base_php:,.0f}")
-    m5.metric("Optimized", f"₱{Energy_draw_php:,.0f}")
-    m6.metric("Saved", f"₱{savings_php:,.0f}", delta=f"₱{savings_php:,.0f} Saved", delta_color="normal")
+    m5.metric("Optimized ₱", f"₱{Energy_draw_php:,.0f}")
+    m6.metric("Saved ₱", f"₱{savings_php:,.0f}", delta=f"₱{savings_php:,.0f} Saved", delta_color="normal")
     
     st.markdown("<br>", unsafe_allow_html=True) 
     
@@ -421,8 +428,7 @@ with col_out:
     c1.metric("Efficiency", f"{eff_score:.1f}%", delta=eff_delta, delta_color=eff_delta_color)
     c2.metric("CRR", f"{crr_percentage:.1f}%")
     
-   
-   # SAAS STYLE GRAPH
+    # SAAS STYLE GRAPH
     fig = go.Figure()
     
     fig.add_trace(go.Scatter(
@@ -432,12 +438,9 @@ with col_out:
         hoverinfo='y'
     ))
     
-    # Optional: If the green line still looks weird when it hits 0, 
-    # you can remove `shape='spline'` to make it a direct, sharp drop.
     fig.add_trace(go.Scatter(
         x=st.session_state.history_time, y=st.session_state.history_opt, 
         mode='lines', name='Optimized', 
-        # Keep 'spline', but tighten the smoothing factor to prevent undershoots
         line=dict(color='#00FF00', width=3, shape='spline', smoothing=0.3), 
         fill='tozeroy', fillcolor='rgba(0, 255, 0, 0.1)',
         hoverinfo='y'
@@ -452,7 +455,7 @@ with col_out:
     fig.add_annotation(x=last_x, y=last_opt_y, text="Optimized", showarrow=False, 
                        yshift=-15, font=dict(family="Inter", color="#00FF00", size=12, weight="bold"))
 
-   # Dynamically find the highest point so the graph ceiling scales perfectly
+    # Dynamically find the highest point so the graph ceiling scales perfectly
     max_y = max(max(st.session_state.history_base), max(st.session_state.history_opt))
     ceiling = max_y * 1.2 if max_y > 0 else 100
     
@@ -461,7 +464,6 @@ with col_out:
 
     fig.update_layout(
         height=300, 
-        # Increased bottom margin (b=20) to lift the whole graph up slightly
         margin=dict(l=0, r=20, t=10, b=20), 
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
@@ -474,12 +476,11 @@ with col_out:
             zeroline=False
         ), 
         yaxis=dict(
-            range=[floor, ceiling], # <-- Starts slightly below 0 now
+            range=[floor, ceiling], 
             gridcolor='rgba(255,255,255,0.05)', 
             title="Watts", 
             title_font=dict(family="Inter", size=11, color='#aaaaaa'), 
             tickfont=dict(color='#aaaaaa'),
-            # Optional: Adds a faint line exactly at 0 so it looks grounded
             zeroline=True, 
             zerolinecolor='rgba(255,255,255,0.1)' 
         )
