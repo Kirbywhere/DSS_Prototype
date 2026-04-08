@@ -75,7 +75,7 @@ st.markdown("""
     <style>
     /* Import Premium SaaS Font */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
-    
+
     html, body, p, div, h1, h2, h3, h4, h5, h6, label, button, input {
         font-family: 'Inter', sans-serif;
     }
@@ -154,6 +154,38 @@ st.markdown("""
     
     h3 { margin-bottom: 0rem !important; padding-bottom: 0.2rem !important; }
     h4 { margin-bottom: 0rem !important; padding-bottom: 0.5rem !important; font-weight: 700 !important; letter-spacing: 1px;}
+    
+    /* --- FONT SIZE CONTROL: OUTSIDE THE BOXES --- */
+    /* 1. Increase general text and Markdown paragraphs */
+    p, .stMarkdown p {
+        font-size: 1.5rem !important; 
+    }
+    /* 2. Increase input labels (Sliders, Toggles, Radio buttons) */
+    label, div[data-testid="stWidgetLabel"] p, .stRadio label p {
+        font-size: 1.3rem !important;
+        font-weight: 600 !important; 
+    }
+    /* 3. Increase H4 Headings */
+    h4 {
+        font-size: 2.4rem !important; 
+    }
+
+    /* --- FONT SIZE CONTROL: INSIDE THE METRIC BOXES --- */
+    /* Resize Metric Text to prevent cutoff for large numbers */
+    div[data-testid="stMetricValue"] {
+        font-size: 2.0rem !important; 
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    /* Ensure the metric label inside the box doesn't inherit the larger general <p> size */
+    div[data-testid="stMetricLabel"] p {
+        font-size: 1.0rem !important;
+        font-weight: 400 !important;
+    }
+    div[data-testid="stMetricDelta"] {
+        font-size: 0.85rem !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -217,7 +249,7 @@ with col_in:
 
     num_pcs = 0 
     if room_type == "Computer Lab":
-        num_pcs = st.number_input("💻 Active PCs", min_value=0, max_value=50, value=st.session_state.active_pcs)
+        num_pcs = st.number_input("💻 Active PCs", min_value=0, max_value=30, value=st.session_state.active_pcs)
         st.session_state.active_pcs = num_pcs
 
     st.markdown("<br>", unsafe_allow_html=True) 
@@ -281,10 +313,11 @@ Energy_draw_php = (active_w/1000 * 10 * 22 * ACTIVE_RATE)
 savings_php = max(0, monthly_base_php - Energy_draw_php)
 crr_percentage = (savings_php / monthly_base_php) * 100
 
-if in_occ == 0:
-    eff_score = max(0, (1 - (active_w / peak_w)) * 100) if active_w > 0 else 100.0
+# Calculate true system efficiency based on actual power savings
+if peak_w > 0:
+    eff_score = max(0.0, (1 - (active_w / peak_w)) * 100)
 else:
-    eff_score = 100 - out_val
+    eff_score = 0.0
 
 # --- DYNAMIC "STANDBY / ALERT" THEME OVERRIDE ---
 if in_occ == 0:
@@ -335,8 +368,8 @@ with col_mid:
     
     m4, m5, m6 = st.columns(3)
     m4.metric("Current ₱", f"₱{monthly_base_php:,.0f}")
-    m5.metric("Optimized ₱", f"₱{Energy_draw_php:,.0f}")
-    m6.metric("Saved ₱", f"₱{savings_php:,.0f}", delta=f"₱{savings_php:,.0f} Saved", delta_color="normal")
+    m5.metric("Optimized", f"₱{Energy_draw_php:,.0f}")
+    m6.metric("Saved", f"₱{savings_php:,.0f}", delta=f"₱{savings_php:,.0f} Saved", delta_color="normal")
     
     st.markdown("<br>", unsafe_allow_html=True) 
     
@@ -388,7 +421,8 @@ with col_out:
     c1.metric("Efficiency", f"{eff_score:.1f}%", delta=eff_delta, delta_color=eff_delta_color)
     c2.metric("CRR", f"{crr_percentage:.1f}%")
     
-    # SAAS STYLE GRAPH
+   
+   # SAAS STYLE GRAPH
     fig = go.Figure()
     
     fig.add_trace(go.Scatter(
@@ -398,10 +432,13 @@ with col_out:
         hoverinfo='y'
     ))
     
+    # Optional: If the green line still looks weird when it hits 0, 
+    # you can remove `shape='spline'` to make it a direct, sharp drop.
     fig.add_trace(go.Scatter(
         x=st.session_state.history_time, y=st.session_state.history_opt, 
         mode='lines', name='Optimized', 
-        line=dict(color='#00FF00', width=3, shape='spline'), 
+        # Keep 'spline', but tighten the smoothing factor to prevent undershoots
+        line=dict(color='#00FF00', width=3, shape='spline', smoothing=0.3), 
         fill='tozeroy', fillcolor='rgba(0, 255, 0, 0.1)',
         hoverinfo='y'
     ))
@@ -415,13 +452,36 @@ with col_out:
     fig.add_annotation(x=last_x, y=last_opt_y, text="Optimized", showarrow=False, 
                        yshift=-15, font=dict(family="Inter", color="#00FF00", size=12, weight="bold"))
 
+   # Dynamically find the highest point so the graph ceiling scales perfectly
+    max_y = max(max(st.session_state.history_base), max(st.session_state.history_opt))
+    ceiling = max_y * 1.2 if max_y > 0 else 100
+    
+    # Calculate a slight "basement" (5% of the ceiling) so the 0 line hovers
+    floor = -(ceiling * 0.05) 
+
     fig.update_layout(
         height=300, 
-        margin=dict(l=0, r=20, t=10, b=0), 
+        # Increased bottom margin (b=20) to lift the whole graph up slightly
+        margin=dict(l=0, r=20, t=10, b=20), 
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         showlegend=False,
-        xaxis=dict(title="Per Adjustment", title_font=dict(family="Inter", size=11, color='#aaaaaa'), showticklabels=False, showgrid=False, zeroline=False), 
-        yaxis=dict(gridcolor='rgba(255,255,255,0.05)', title="Watts", title_font=dict(family="Inter", size=11, color='#aaaaaa'), tickfont=dict(color='#aaaaaa'))
+        xaxis=dict(
+            title="Per Adjustment", 
+            title_font=dict(family="Inter", size=11, color='#aaaaaa'), 
+            showticklabels=False, 
+            showgrid=False, 
+            zeroline=False
+        ), 
+        yaxis=dict(
+            range=[floor, ceiling], # <-- Starts slightly below 0 now
+            gridcolor='rgba(255,255,255,0.05)', 
+            title="Watts", 
+            title_font=dict(family="Inter", size=11, color='#aaaaaa'), 
+            tickfont=dict(color='#aaaaaa'),
+            # Optional: Adds a faint line exactly at 0 so it looks grounded
+            zeroline=True, 
+            zerolinecolor='rgba(255,255,255,0.1)' 
+        )
     )
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
