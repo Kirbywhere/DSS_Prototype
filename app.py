@@ -183,8 +183,20 @@ st.markdown("""
         font-size: 1.0rem !important;
         font-weight: 400 !important;
     }
-    div[data-testid="stMetricDelta"] {
-        font-size: 0.85rem !important;
+    
+    /* --- FIX FOR OVERSIZED DELTA / WATTAGE DROP NUMBERS --- */
+    /* Forces the text, arrows, and any hidden paragraph tags inside the delta back to a small size */
+    div[data-testid="stMetricDelta"], 
+    div[data-testid="stMetricDelta"] p, 
+    div[data-testid="stMetricDelta"] span, 
+    div[data-testid="stMetricDelta"] div {
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+    }
+    /* Shrinks the little up/down arrow icon so it matches the smaller text */
+    div[data-testid="stMetricDelta"] svg {
+        width: 1rem !important;
+        height: 1rem !important;
     }
     
     /* --- FIX FOR OVERSIZED SLIDER NUMBERS --- */
