@@ -167,7 +167,7 @@ st.markdown("""
     }
     /* 3. Increase H4 Headings */
     h4 {
-        font-size: 2.4rem !important; 
+        font-size: 2.0rem !important; 
     }
 
     /* --- FONT SIZE CONTROL: INSIDE THE METRIC BOXES --- */
@@ -204,6 +204,15 @@ st.markdown("""
     div[data-baseweb="slider"] * {
         font-size: 0.9rem !important; 
         font-weight: 400 !important;
+    }
+
+    /* --- FIX FOR OVERSIZED BUTTONS (Admin & Popovers) --- */
+    /* Forces the text inside all buttons back down to a standard, clean size */
+    button p, 
+    button div, 
+    button span {
+        font-size: 1.0rem !important; 
+        font-weight: 600 !important;
     }
     </style>
     """, unsafe_allow_html=True)
