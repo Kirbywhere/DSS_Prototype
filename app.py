@@ -50,8 +50,8 @@ def toggle_admin():
 ANNUAL_HOURS = 10 * 264 
 STD_W_PC = 150 
 STD_W_PROJ = 300
-STD_W_Switch_1 = 27
-STD_W_S2 = 27
+STD_W_Switch1 = 27
+STD_W_Switch2 = 27
 STD_W_FANS = 130
 STD_RATE = 7.55
 
@@ -59,22 +59,22 @@ if st.session_state.show_admin:
     W_PC = st.session_state.sim_pc_w
     W_PROJ = st.session_state.sim_proj_w
     ACTIVE_RATE = st.session_state.sim_rate
-    W_Switch_1 = st.session_state.sim_light_w
-    W_S2 = st.session_state.sim_light_w 
+    W_Switch1 = st.session_state.sim_light_w
+    W_Switch2 = st.session_state.sim_light_w 
     W_FANS = st.session_state.sim_fan_w
 else:
     W_PC = STD_W_PC
     W_PROJ = STD_W_PROJ
     ACTIVE_RATE = STD_RATE
-    W_Switch_1 = STD_W_Switch_1
-    W_S2 = STD_W_S2
+    W_Switch1 = STD_W_Switch1
+    W_Switch2 = STD_W_Switch2
     W_FANS = STD_W_FANS
 
 # --- 3. PREMIUM CSS STYLING ---
 st.markdown("""
     <style>
     /* Import Premium SaaS Font */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/csSwitch2?family=Inter:wght@300;400;600;700;800&display=swap');
 
     html, body, p, div, h1, h2, h3, h4, h5, h6, label, button, input {
         font-family: 'Inter', sans-serif;
@@ -314,9 +314,9 @@ if in_occ == 0:
     opt_proj_w, opt_pc_load = 0, 0
 else:
     if in_occ > 20 or out_val > 70: 
-        draw_lights, rec_lights = W_Switch_1 + W_S2, "FULL (Switch_1 & S2)"
+        draw_lights, rec_lights = W_Switch1 + W_Switch2, "FULL (Switch1 & Switch2)"
     elif in_occ > 0 or out_val > 35: 
-        draw_lights, rec_lights = W_Switch_1, "DIM (Switch_1)"
+        draw_lights, rec_lights = W_Switch1, "DIM (Switch1)"
     else: 
         draw_lights, rec_lights = 0, "OFF"
 
@@ -333,7 +333,7 @@ else:
 
 active_w = draw_lights + draw_fans + opt_proj_w + opt_pc_load
 
-peak_w = (W_Switch_1 + W_S2) + W_FANS + (W_PROJ if proj_override else 0) + (num_pcs * W_PC)
+peak_w = (W_Switch1 + W_Switch2) + W_FANS + (W_PROJ if proj_override else 0) + (num_pcs * W_PC)
 if peak_w == 0: peak_w = 1
 
 monthly_base_php = (peak_w/1000 * 10 * 22 * ACTIVE_RATE)
@@ -407,8 +407,8 @@ with col_mid:
     def badge(text, style_class):
         st.markdown(f'<div class="sys-badge {style_class}">{text}</div>', unsafe_allow_html=True)
 
-    if rec_lights == "FULL (Switch_1 & S2)": badge(f"💡 LIGHTS: {rec_lights}", "badge-error")
-    elif rec_lights == "DIM (Switch_1)": badge(f"💡 LIGHTS: {rec_lights}", "badge-warning")
+    if rec_lights == "FULL (Switch1 & Switch2)": badge(f"💡 LIGHTS: {rec_lights}", "badge-error")
+    elif rec_lights == "DIM (Switch1)": badge(f"💡 LIGHTS: {rec_lights}", "badge-warning")
     else: badge(f"💡 LIGHTS: {rec_lights}", "badge-info")
 
     if rec_fans == "HIGH": badge(f"🌀 FANS: {rec_fans}", "badge-error")
