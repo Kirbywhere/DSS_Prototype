@@ -50,7 +50,7 @@ def toggle_admin():
 ANNUAL_HOURS = 10 * 264 
 STD_W_PC = 150 
 STD_W_PROJ = 300
-STD_W_S1 = 27
+STD_W_Switch 1 = 27
 STD_W_S2 = 27
 STD_W_FANS = 130
 STD_RATE = 7.55
@@ -59,14 +59,14 @@ if st.session_state.show_admin:
     W_PC = st.session_state.sim_pc_w
     W_PROJ = st.session_state.sim_proj_w
     ACTIVE_RATE = st.session_state.sim_rate
-    W_S1 = st.session_state.sim_light_w
+    W_Switch 1 = st.session_state.sim_light_w
     W_S2 = st.session_state.sim_light_w 
     W_FANS = st.session_state.sim_fan_w
 else:
     W_PC = STD_W_PC
     W_PROJ = STD_W_PROJ
     ACTIVE_RATE = STD_RATE
-    W_S1 = STD_W_S1
+    W_Switch 1 = STD_W_Switch 1
     W_S2 = STD_W_S2
     W_FANS = STD_W_FANS
 
@@ -297,7 +297,7 @@ with col_in:
             if proj_override:
                 st.slider("Projector Wattage", 50, 800, key="sim_proj_w", help="Standard: ~300W")
                 
-            st.slider("Light Switch Wattage", 10, 300, key="sim_light_w", help="Standard: ~27W")
+            st.slider("Light Bulb Wattage", 10, 300, key="sim_light_w", help="Standard: ~27W")
             st.slider("Fan Wattage", 30, 250, key="sim_fan_w", help="Standard: ~130W")
             st.number_input("Rate (₱/kWh)", 5.0, 30.0, step=0.5, key="sim_rate")
 
@@ -314,9 +314,9 @@ if in_occ == 0:
     opt_proj_w, opt_pc_load = 0, 0
 else:
     if in_occ > 20 or out_val > 70: 
-        draw_lights, rec_lights = W_S1 + W_S2, "FULL (S1 & S2)"
+        draw_lights, rec_lights = W_Switch 1 + W_S2, "FULL (Switch 1 & S2)"
     elif in_occ > 0 or out_val > 35: 
-        draw_lights, rec_lights = W_S1, "DIM (Switch 1)"
+        draw_lights, rec_lights = W_Switch 1, "DIM (Switch 1)"
     else: 
         draw_lights, rec_lights = 0, "OFF"
 
@@ -333,7 +333,7 @@ else:
 
 active_w = draw_lights + draw_fans + opt_proj_w + opt_pc_load
 
-peak_w = (W_S1 + W_S2) + W_FANS + (W_PROJ if proj_override else 0) + (num_pcs * W_PC)
+peak_w = (W_Switch 1 + W_S2) + W_FANS + (W_PROJ if proj_override else 0) + (num_pcs * W_PC)
 if peak_w == 0: peak_w = 1
 
 monthly_base_php = (peak_w/1000 * 10 * 22 * ACTIVE_RATE)
@@ -407,7 +407,7 @@ with col_mid:
     def badge(text, style_class):
         st.markdown(f'<div class="sys-badge {style_class}">{text}</div>', unsafe_allow_html=True)
 
-    if rec_lights == "FULL (S1 & S2)": badge(f"💡 LIGHTS: {rec_lights}", "badge-error")
+    if rec_lights == "FULL (Switch 1 & S2)": badge(f"💡 LIGHTS: {rec_lights}", "badge-error")
     elif rec_lights == "DIM (Switch 1)": badge(f"💡 LIGHTS: {rec_lights}", "badge-warning")
     else: badge(f"💡 LIGHTS: {rec_lights}", "badge-info")
 
