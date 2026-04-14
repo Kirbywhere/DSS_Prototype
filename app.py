@@ -277,7 +277,7 @@ with col_in:
 
     num_pcs = 0 
     if room_type == "Computer Lab":
-        num_pcs = st.number_input("💻 Active PCs", min_value=0, max_value=30, value=st.session_state.active_pcs)
+        num_pcs = st.number_input("💻 Active PCs", min_value=0, max_value=50, value=st.session_state.active_pcs)
         st.session_state.active_pcs = num_pcs
 
     st.markdown("<br>", unsafe_allow_html=True) 
@@ -395,8 +395,8 @@ with col_mid:
     m3.metric("Saved", f"{watt_savings}W", delta=f"{watt_savings}W Drop", delta_color="normal")
     
     m4, m5, m6 = st.columns(3)
-    m4.metric("Current ₱", f"₱{monthly_base_php:,.0f}")
-    m5.metric("Optimized ₱", f"₱{Energy_draw_php:,.0f}")
+    m4.metric("Current", f"₱{monthly_base_php:,.0f}")
+    m5.metric("Optimized", f"₱{Energy_draw_php:,.0f}")
     m6.metric("Saved ₱", f"₱{savings_php:,.0f}", delta=f"₱{savings_php:,.0f} Saved", delta_color="normal")
     
     st.markdown("<br>", unsafe_allow_html=True) 
