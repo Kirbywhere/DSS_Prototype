@@ -397,7 +397,7 @@ with col_mid:
     m4, m5, m6 = st.columns(3)
     m4.metric("Current", f"₱{monthly_base_php:,.0f}")
     m5.metric("Optimized", f"₱{Energy_draw_php:,.0f}")
-    m6.metric("Saved ₱", f"₱{savings_php:,.0f}", delta=f"₱{savings_php:,.0f} Saved", delta_color="normal")
+    m6.metric("Saved", f"₱{savings_php:,.0f}", delta=f"₱{savings_php:,.0f} Saved", delta_color="normal")
     
     st.markdown("<br>", unsafe_allow_html=True) 
     
