@@ -390,7 +390,7 @@ with col_in:
         num_pcs = st.number_input(
             ":material/computer: Active PCs", 
             min_value=0, 
-            max_value=30, 
+            max_value=50, 
             value=st.session_state.active_pcs, 
             key="ui_active_pcs"
         )
@@ -406,101 +406,105 @@ with col_in:
         
         with st.popover(":material/settings: Admin Controls", use_container_width=True):
             
-            c_head1, c_head2 = st.columns([3, 1])
-            c_head1.markdown(":material/verified_user: Admin Mode")
-            c_head2.button(":material/refresh: Reset", on_click=reset_admin_defaults, use_container_width=True)
-            st.markdown("---")
-            
-            # WIDE 3-COLUMN MEGA MENU (STRETCHED TO 1100PX - ZERO SCROLLING)
-            pop_left, pop_mid, pop_right = st.columns(3)
-            
-            with pop_left:
-                # Box 1: Light Switches
-                with st.container(border=True):
-                    st.markdown(":material/lightbulb: Light Switches")
-                    
-                    c_s1, c_s2 = st.columns(2)
-                    with c_s1:
-                        st.markdown("<div style='text-align: center; font-size:0.9em; font-weight:600; color:#ccc; margin-bottom:8px;'>Grid 1</div>", unsafe_allow_html=True)
-                        st.markdown('<div class="btn-light"></div>', unsafe_allow_html=True)
-                        l1_label = "ON" if st.session_state.admin_s1 else "OFF"
-                        st.button(l1_label, on_click=click_toggle_s1, use_container_width=True, key="btn_s1")
-                        
-                    with c_s2:
-                        st.markdown("<div style='text-align: center; font-size:0.9em; font-weight:600; color:#ccc; margin-bottom:8px;'>Grid 2</div>", unsafe_allow_html=True)
-                        st.markdown('<div class="btn-light"></div>', unsafe_allow_html=True)
-                        l2_label = "ON" if st.session_state.admin_s2 else "OFF"
-                        st.button(l2_label, on_click=click_toggle_s2, use_container_width=True, key="btn_s2")
+            # Master block encapsulating the header and the modules
+            with st.container(border=True):
                 
-                # Box 2: Fan Controls
-                with st.container(border=True):
-                    st.markdown(":material/air: Fan Controls")
-                    
-                    c_f1, c_f2 = st.columns(2)
-                    with c_f1:
-                        st.markdown("<div style='text-align: center; font-size:0.9em; font-weight:600; color:#ccc; margin-bottom:8px;'>Module 1</div>", unsafe_allow_html=True)
-                        st.markdown('<div class="btn-fan"></div>', unsafe_allow_html=True)
-                        f1_state = st.session_state.admin_f1
-                        f1_label = f"{f1_state.upper()}" if f1_state != "OFF" else "OFF"
-                        st.button(f1_label, on_click=click_cycle_f1, use_container_width=True, key="btn_f1")
+                c_head1, c_head2 = st.columns([4, 1])
+                c_head1.markdown("### :material/verified_user: Admin Mode")
+                c_head2.button(":material/refresh: Reset", on_click=reset_admin_defaults, use_container_width=True)
+                
+                st.divider()
+                
+                # WIDE 3-COLUMN MEGA MENU (STRETCHED TO 1100PX - ZERO SCROLLING)
+                pop_left, pop_mid, pop_right = st.columns(3)
+                
+                with pop_left:
+                    # Box 1: Light Switches
+                    with st.container(border=True):
+                        st.markdown("##### :material/lightbulb: Light Switches")
                         
-                    with c_f2:
-                        st.markdown("<div style='text-align: center; font-size:0.9em; font-weight:600; color:#ccc; margin-bottom:8px;'>Module 2</div>", unsafe_allow_html=True)
-                        st.markdown('<div class="btn-fan"></div>', unsafe_allow_html=True)
-                        f2_state = st.session_state.admin_f2
-                        f2_label = f"{f2_state.upper()}" if f2_state != "OFF" else "OFF"
-                        st.button(f2_label, on_click=click_cycle_f2, use_container_width=True, key="btn_f2")
+                        c_s1, c_s2 = st.columns(2)
+                        with c_s1:
+                            st.markdown("<div style='text-align: center; font-size:0.9em; font-weight:600; color:#ccc; margin-bottom:8px;'>Switch 1</div>", unsafe_allow_html=True)
+                            st.markdown('<div class="btn-light"></div>', unsafe_allow_html=True)
+                            l1_label = "ON" if st.session_state.admin_s1 else "OFF"
+                            st.button(l1_label, on_click=click_toggle_s1, use_container_width=True, key="btn_s1")
+                            
+                        with c_s2:
+                            st.markdown("<div style='text-align: center; font-size:0.9em; font-weight:600; color:#ccc; margin-bottom:8px;'>Switch 2</div>", unsafe_allow_html=True)
+                            st.markdown('<div class="btn-light"></div>', unsafe_allow_html=True)
+                            l2_label = "ON" if st.session_state.admin_s2 else "OFF"
+                            st.button(l2_label, on_click=click_toggle_s2, use_container_width=True, key="btn_s2")
+                    
+                    # Box 2: Fan Controls
+                    with st.container(border=True):
+                        st.markdown("##### :material/air: Fan Controls")
+                        
+                        c_f1, c_f2 = st.columns(2)
+                        with c_f1:
+                            st.markdown("<div style='text-align: center; font-size:0.9em; font-weight:600; color:#ccc; margin-bottom:8px;'>Fan 1</div>", unsafe_allow_html=True)
+                            st.markdown('<div class="btn-fan"></div>', unsafe_allow_html=True)
+                            f1_state = st.session_state.admin_f1
+                            f1_label = f"{f1_state.upper()}" if f1_state != "OFF" else "OFF"
+                            st.button(f1_label, on_click=click_cycle_f1, use_container_width=True, key="btn_f1")
+                            
+                        with c_f2:
+                            st.markdown("<div style='text-align: center; font-size:0.9em; font-weight:600; color:#ccc; margin-bottom:8px;'>Fan 2</div>", unsafe_allow_html=True)
+                            st.markdown('<div class="btn-fan"></div>', unsafe_allow_html=True)
+                            f2_state = st.session_state.admin_f2
+                            f2_label = f"{f2_state.upper()}" if f2_state != "OFF" else "OFF"
+                            st.button(f2_label, on_click=click_cycle_f2, use_container_width=True, key="btn_f2")
 
-            with pop_mid:
-                # Box 3: Base Power Limits
-                with st.container(border=True):
-                    st.markdown(":material/bolt: Base Power")
+                with pop_mid:
+                    # Box 3: Base Power Limits
+                    with st.container(border=True):
+                        st.markdown("##### :material/bolt: Base Power")
+                        
+                        st.session_state.sim_light_w = st.number_input(
+                            "Light Switch (Watts)", 
+                            min_value=10, max_value=1000, step=5,
+                            value=st.session_state.sim_light_w, 
+                            key="ui_sim_light_w"
+                        )
+                        st.session_state.sim_fan_w = st.number_input(
+                            "Fan Total (Watts)", 
+                            min_value=30, max_value=2000, step=10,
+                            value=st.session_state.sim_fan_w, 
+                            key="ui_sim_fan_w"
+                        )
+                        
+                    # Box 4: Electricity Rate
+                    with st.container(border=True):
+                        st.markdown("##### :material/payments: Utility Cost")
+                        st.session_state.sim_rate = st.number_input(
+                            "Rate (₱/kWh)", 
+                            min_value=1.0, max_value=50.0, step=0.5, 
+                            value=st.session_state.sim_rate, 
+                            key="ui_sim_rate"
+                        )
                     
-                    st.session_state.sim_light_w = st.number_input(
-                        "Light Switch (Watts)", 
-                        min_value=10, max_value=1000, step=5,
-                        value=st.session_state.sim_light_w, 
-                        key="ui_sim_light_w"
-                    )
-                    st.session_state.sim_fan_w = st.number_input(
-                        "Fan Total (Watts)", 
-                        min_value=30, max_value=2000, step=10,
-                        value=st.session_state.sim_fan_w, 
-                        key="ui_sim_fan_w"
-                    )
-                    
-                # Box 4: Electricity Rate
-                with st.container(border=True):
-                    st.markdown(":material/payments: Utility Cost")
-                    st.session_state.sim_rate = st.number_input(
-                        "Rate (₱/kWh)", 
-                        min_value=1.0, max_value=50.0, step=0.5, 
-                        value=st.session_state.sim_rate, 
-                        key="ui_sim_rate"
-                    )
-                
-            with pop_right:
-                # Box 5: Device Power Limits
-                with st.container(border=True):
-                    st.markdown(":material/computer: Device Power")
-                    
-                    if room_type == "Typical Classroom" and not proj_override:
-                        st.info("No active devices in this room.")
-                    else:
-                        if room_type == "Computer Lab" and num_pcs > 0:
-                            st.session_state.sim_pc_w = st.number_input(
-                                "PC Wattage", 
-                                min_value=15, max_value=1500, step=10,
-                                value=st.session_state.sim_pc_w, 
-                                key="ui_sim_pc_w"
-                            )
-                        if proj_override:
-                            st.session_state.sim_proj_w = st.number_input(
-                                "Proj Wattage", 
-                                min_value=50, max_value=2000, step=10,
-                                value=st.session_state.sim_proj_w, 
-                                key="ui_sim_proj_w"
-                            )
+                with pop_right:
+                    # Box 5: Device Power Limits
+                    with st.container(border=True):
+                        st.markdown("##### :material/computer: Device Power")
+                        
+                        if room_type == "Typical Classroom" and not proj_override:
+                            st.info("No active devices in this room.")
+                        else:
+                            if room_type == "Computer Lab" and num_pcs > 0:
+                                st.session_state.sim_pc_w = st.number_input(
+                                    "PC Wattage", 
+                                    min_value=15, max_value=1500, step=10,
+                                    value=st.session_state.sim_pc_w, 
+                                    key="ui_sim_pc_w"
+                                )
+                            if proj_override:
+                                st.session_state.sim_proj_w = st.number_input(
+                                    "Proj Wattage", 
+                                    min_value=50, max_value=2000, step=10,
+                                    value=st.session_state.sim_proj_w, 
+                                    key="ui_sim_proj_w"
+                                )
 
 # --- 9. SIMULATION CALCULATIONS ---
 sim.input['occupancy'] = in_occ
