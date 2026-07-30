@@ -13,7 +13,6 @@ st.set_page_config(
 )
 
 # --- 2. MASTER STATE INITIALIZATION ---
-# Centralizing defaults makes the code infinitely cleaner and easier to manage
 DEFAULT_STATE = {
     'is_initialized': True,
     'show_admin': False,
@@ -25,12 +24,13 @@ DEFAULT_STATE = {
     'proj_on': False,
     'in_occ': 24,
     'in_tmp': 34,
+    'in_hours': 6.0,  # Added state for custom operating hours
     'room_mode': "Typical Classroom",
     'sim_pc_w': 150,
     'sim_proj_w': 300,
     'sim_rate': 7.55,
     'sim_light_w': 27,
-    'sim_fan_w': 130, # This is the total for BOTH fans combined
+    'sim_fan_w': 130, 
     'admin_s1': False,
     'admin_s2': False,
     'admin_f1': "Mode 3",
@@ -65,12 +65,10 @@ else:
     W_S2 = STD_W_S2
     W_FANS_TOTAL = STD_W_FANS
 
-# Each fan gets exactly half of the total allocated fan wattage
 W_SINGLE_FAN = W_FANS_TOTAL / 2
 
 # --- 4. CALLBACK FUNCTIONS ---
 def get_auto_fan_mode(occ, tmp, fuzzy_out):
-    """Helper function to determine the correct automated fan mode"""
     if occ == 0:
         return "OFF"
     elif fuzzy_out > 65 or tmp >= 27:
@@ -83,7 +81,6 @@ def get_auto_fan_mode(occ, tmp, fuzzy_out):
 def toggle_admin(): 
     st.session_state.show_admin = not st.session_state.show_admin
     
-    # Sync the controls to the current automated system recommendation
     if st.session_state.show_admin:
         occ = st.session_state.in_occ
         tmp = st.session_state.in_tmp
@@ -103,7 +100,6 @@ def toggle_admin():
         st.session_state.admin_f2 = auto_mode
 
 def reset_admin_defaults():
-    # Forcefully overwrite both the backend variable AND the UI widget key
     override_keys = ['sim_pc_w', 'sim_proj_w', 'sim_light_w', 'sim_fan_w', 'sim_rate']
     for key in override_keys:
         st.session_state[key] = DEFAULT_STATE[key]
@@ -127,7 +123,6 @@ def reset_admin_defaults():
     st.session_state.admin_f1 = auto_mode
     st.session_state.admin_f2 = auto_mode
 
-# Smart Button Callbacks
 def click_toggle_s1():
     st.session_state.admin_s1 = not st.session_state.admin_s1
 
@@ -149,7 +144,6 @@ def click_cycle_f2():
 # --- 5. PREMIUM CSS STYLING ---
 st.markdown("""
     <style>
-    /* Import Premium SaaS Font and Minimalist Material Symbols */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 
@@ -196,7 +190,6 @@ st.markdown("""
         transition: background-color 1.5s ease, border-color 1.5s ease !important;
     }
 
-    /* --- POPOVER WIDTH OVERRIDE (MAXIMUM WIDTH STRATEGY) --- */
     div[data-testid="stPopoverBody"] {
         width: 1100px !important; 
         max-width: 95vw !important;
@@ -205,9 +198,6 @@ st.markdown("""
         box-shadow: 0px 10px 30px rgba(0,0,0,0.7) !important;
     }
 
-    /* --- SMART HOME BUTTON SHAPES & DYNAMIC COLORS --- */
-    
-    /* Shape 1: Bulb-Shaped Light Buttons */
     div[data-testid="element-container"]:has(.btn-light) + div[data-testid="element-container"] button {
         border-radius: 50% 50% 25% 25% !important; 
         height: 100px !important;
@@ -221,7 +211,6 @@ st.markdown("""
         transition: all 0.3s ease !important;
     }
 
-    /* Shape 2: Circle Fan Buttons */
     div[data-testid="element-container"]:has(.btn-fan) + div[data-testid="element-container"] button {
         border-radius: 50% !important; 
         height: 100px !important;
@@ -235,7 +224,6 @@ st.markdown("""
         transition: all 0.3s ease !important;
     }
 
-    /* COLOR: Pastel Yellow (Lights ON) */
     div[data-testid="element-container"]:has(.btn-light) + div button:has(p:contains("ON")) {
         background: rgba(255, 202, 40, 0.15) !important;
         border: 2px solid rgba(255, 202, 40, 0.6) !important;
@@ -243,7 +231,6 @@ st.markdown("""
         color: #ffca28 !important;
     }
     
-    /* COLOR: Pastel Green (Fan Mode 1) */
     div[data-testid="element-container"]:has(.btn-fan) + div button:has(p:contains("MODE 1")) {
         background: rgba(74, 222, 128, 0.15) !important;
         border: 2px solid rgba(74, 222, 128, 0.6) !important;
@@ -251,7 +238,6 @@ st.markdown("""
         color: #4ade80 !important;
     }
 
-    /* COLOR: Pastel Yellow (Fan Mode 2) */
     div[data-testid="element-container"]:has(.btn-fan) + div button:has(p:contains("MODE 2")) {
         background: rgba(255, 202, 40, 0.15) !important;
         border: 2px solid rgba(255, 202, 40, 0.6) !important;
@@ -259,7 +245,6 @@ st.markdown("""
         color: #ffca28 !important;
     }
 
-    /* COLOR: Pastel Red (Fan Mode 3) */
     div[data-testid="element-container"]:has(.btn-fan) + div button:has(p:contains("MODE 3")) {
         background: rgba(255, 107, 107, 0.15) !important;
         border: 2px solid rgba(255, 107, 107, 0.6) !important;
@@ -267,7 +252,6 @@ st.markdown("""
         color: #ff6b6b !important;
     }
 
-    /* COLOR: Muted Grey (OFF State for Both) */
     div[data-testid="element-container"]:has(.btn-light) + div button:has(p:contains("OFF")),
     div[data-testid="element-container"]:has(.btn-fan) + div button:has(p:contains("OFF")) {
         background: rgba(38,39,48,0.8) !important;
@@ -276,7 +260,6 @@ st.markdown("""
         box-shadow: none !important;
     }
     
-    /* Button Text Sizing */
     div[data-testid="element-container"]:has(.btn-light) + div button p,
     div[data-testid="element-container"]:has(.btn-fan) + div button p {
         font-size: 1.0rem !important;
@@ -284,7 +267,6 @@ st.markdown("""
         line-height: 1.2 !important;
     }
 
-    /* Custom Pill Badges */
     .sys-badge {
         padding: 8px 16px; 
         border-radius: 20px; 
@@ -311,13 +293,11 @@ st.markdown("""
         letter-spacing: 0.5px;
     }
     
-    /* Revert Title Colors to Green */
     .brand-text { color: #4ade80 !important; font-weight: 800; font-size: 1rem; letter-spacing: 2px; margin-bottom: -5px; margin-top: 20px; }
     
     h3 { margin-bottom: 0rem !important; padding-bottom: 0.2rem !important; }
     h4 { margin-bottom: 0rem !important; padding-bottom: 0.5rem !important; font-weight: 700 !important; letter-spacing: 1px;}
     
-    /* --- FONT SIZE CONTROL --- */
     p, .stMarkdown p { font-size: 1.5rem !important; }
     label, div[data-testid="stWidgetLabel"] p, .stRadio label p {
         font-size: 1.2rem !important; font-weight: 600 !important; 
@@ -384,6 +364,9 @@ with col_in:
     proj_override = st.toggle("Projector Active", key="proj_on")
     in_occ = st.slider("Students", 0, 40, key="in_occ") 
     in_tmp = st.slider("Temp (°C)", 20, 40, key="in_tmp") 
+    
+    # NEW: Hours input replacing the hardcoded 220 hours
+    in_hours = st.number_input("Operating Hours", min_value=1.0, max_value=720.0, step=0.5, key="in_hours")
 
     num_pcs = 0 
     if room_type == "Computer Lab":
@@ -406,7 +389,6 @@ with col_in:
         
         with st.popover(":material/settings: Admin Controls", use_container_width=True):
             
-            # Master block encapsulating the header and the modules
             with st.container(border=True):
                 
                 c_head1, c_head2 = st.columns([4, 1])
@@ -415,11 +397,9 @@ with col_in:
                 
                 st.divider()
                 
-                # WIDE 3-COLUMN MEGA MENU (STRETCHED TO 1100PX - ZERO SCROLLING)
                 pop_left, pop_mid, pop_right = st.columns(3)
                 
                 with pop_left:
-                    # Box 1: Light Switches
                     with st.container(border=True):
                         st.markdown("##### :material/lightbulb: Light Switches")
                         
@@ -436,7 +416,6 @@ with col_in:
                             l2_label = "ON" if st.session_state.admin_s2 else "OFF"
                             st.button(l2_label, on_click=click_toggle_s2, use_container_width=True, key="btn_s2")
                     
-                    # Box 2: Fan Controls
                     with st.container(border=True):
                         st.markdown("##### :material/air: Fan Controls")
                         
@@ -456,7 +435,6 @@ with col_in:
                             st.button(f2_label, on_click=click_cycle_f2, use_container_width=True, key="btn_f2")
 
                 with pop_mid:
-                    # Box 3: Base Power Limits
                     with st.container(border=True):
                         st.markdown("##### :material/bolt: Base Power")
                         
@@ -473,7 +451,6 @@ with col_in:
                             key="ui_sim_fan_w"
                         )
                         
-                    # Box 4: Electricity Rate
                     with st.container(border=True):
                         st.markdown("##### :material/payments: Utility Cost")
                         st.session_state.sim_rate = st.number_input(
@@ -484,7 +461,6 @@ with col_in:
                         )
                     
                 with pop_right:
-                    # Box 5: Device Power Limits
                     with st.container(border=True):
                         st.markdown("##### :material/computer: Device Power")
                         
@@ -512,7 +488,6 @@ sim.input['temp'] = in_tmp
 sim.compute()
 out_val = sim.output['energy_rec']
 
-# --- Lighting Logic ---
 if st.session_state.show_admin:
     s1_on = st.session_state.admin_s1
     s2_on = st.session_state.admin_s2
@@ -535,14 +510,12 @@ else:
     draw_lights = 0
     rec_lights = f"OFF{rec_suffix}"
 
-# --- Fan Power Multiplier Engine ---
 def calculate_fan_wattage(mode, max_wattage_per_fan):
     if mode == "Mode 3": return max_wattage_per_fan * 1.0
     if mode == "Mode 2": return max_wattage_per_fan * 0.7
     if mode == "Mode 1": return max_wattage_per_fan * 0.4
     return 0
 
-# --- Fan Logic ---
 if st.session_state.show_admin:
     f1_mode = st.session_state.admin_f1
     f2_mode = st.session_state.admin_f2
@@ -558,22 +531,20 @@ else:
 
 draw_fans = calculate_fan_wattage(f1_mode, W_SINGLE_FAN) + calculate_fan_wattage(f2_mode, W_SINGLE_FAN)
 
-# --- Additional Load ---
 opt_proj_w = W_PROJ if proj_override else 0
 opt_pc_count = min(num_pcs, in_occ) if room_type == "Computer Lab" else 0
 opt_pc_load = opt_pc_count * W_PC
 
-# --- Total Calculations ---
 active_w = draw_lights + draw_fans + opt_proj_w + opt_pc_load
 peak_w = max(1, (W_S1 + W_S2) + W_FANS_TOTAL + (W_PROJ if proj_override else 0) + (num_pcs * W_PC))
 
-monthly_base_php = (peak_w / 1000 * 10 * 22 * ACTIVE_RATE)
-Energy_draw_php = (active_w / 1000 * 10 * 22 * ACTIVE_RATE)
+# NEW: Calculations dynamically using the in_hours parameter
+monthly_base_php = (peak_w / 1000 * in_hours * ACTIVE_RATE)
+Energy_draw_php = (active_w / 1000 * in_hours * ACTIVE_RATE)
 savings_php = max(0, monthly_base_php - Energy_draw_php)
-crr_percentage = (savings_php / monthly_base_php) * 100
+crr_percentage = (savings_php / monthly_base_php) * 100 if monthly_base_php > 0 else 0
 eff_score = max(0.0, (1 - (active_w / peak_w)) * 100)
 
-# Thematic Overlay Override
 if in_occ == 0: 
     st.markdown("""
         <style>
@@ -587,7 +558,6 @@ else:
         </style>
     """, unsafe_allow_html=True)
 
-# Update Chart History
 st.session_state.time_step += 1
 st.session_state.history_time.append(st.session_state.time_step)
 st.session_state.history_base.append(peak_w)
@@ -612,9 +582,10 @@ with col_mid:
     m3.metric("Saved", f"{watt_savings}W", delta=f"{watt_savings}W Drop", delta_color="normal")
     
     m4, m5, m6 = st.columns(3)
-    m4.metric("Current ₱", f"₱{monthly_base_php:,.0f}")
-    m5.metric("Optimized ₱", f"₱{Energy_draw_php:,.0f}")
-    m6.metric("Saved ₱", f"₱{savings_php:,.0f}", delta=f"₱{savings_php:,.0f} Saved", delta_color="normal")
+    # NEW: Updated formatting to accommodate precise smaller hourly rates
+    m4.metric("Unoptimized ₱", f"₱{monthly_base_php:,.2f}")
+    m5.metric("Optimized ₱", f"₱{Energy_draw_php:,.2f}")
+    m6.metric("Saved ₱", f"₱{savings_php:,.2f}", delta=f"₱{savings_php:,.2f} Saved", delta_color="normal")
     
     st.markdown("<br>", unsafe_allow_html=True) 
     st.markdown("#### SYSTEM RECOMMENDATIONS")
