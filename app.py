@@ -531,7 +531,7 @@ else:
 
 draw_fans = calculate_fan_wattage(f1_mode, W_SINGLE_FAN) + calculate_fan_wattage(f2_mode, W_SINGLE_FAN)
 
-opt_proj_w = W_PROJ if proj_override else 0
+opt_proj_w = W_PROJ if (proj_override and in_occ > 0) else 0
 opt_pc_count = min(num_pcs, in_occ) if room_type == "Computer Lab" else 0
 opt_pc_load = opt_pc_count * W_PC
 
