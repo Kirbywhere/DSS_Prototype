@@ -578,13 +578,13 @@ with col_mid:
     
     m1, m2, m3 = st.columns(3)
     m1.metric("Baseline", f"{int(peak_w)}W")
-    m2.metric("Optimized", f"{int(active_w)}W")
+    m2.metric("Optimal", f"{int(active_w)}W")
     m3.metric("Saved", f"{watt_savings}W", delta=f"{watt_savings}W Drop", delta_color="normal")
     
     m4, m5, m6 = st.columns(3)
     # NEW: Updated formatting to accommodate precise smaller hourly rates
-    m4.metric("Unoptimized ₱", f"₱{monthly_base_php:,.2f}")
-    m5.metric("Optimized ₱", f"₱{Energy_draw_php:,.2f}")
+    m4.metric("Baseline ₱  ", f"₱{monthly_base_php:,.2f}")
+    m5.metric("Optimal ₱ ", f"₱{Energy_draw_php:,.2f}")
     m6.metric("Saved ₱", f"₱{savings_php:,.2f}", delta=f"₱{savings_php:,.2f} Saved", delta_color="normal")
     
     st.markdown("<br>", unsafe_allow_html=True) 
