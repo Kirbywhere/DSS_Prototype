@@ -16,6 +16,7 @@ st.set_page_config(
 DEFAULT_STATE = {
     'is_initialized': True,
     'show_admin': False,
+    'is_shutdown': False, 
     'history_time': [1, 2, 3, 4, 5],
     'history_base': [2000] * 5,
     'history_opt': [2000] * 5,
@@ -24,7 +25,7 @@ DEFAULT_STATE = {
     'proj_on': False,
     'in_occ': 24,
     'in_tmp': 34,
-    'in_hours': 6.0,  # Added state for custom operating hours
+    'in_hours': 6.0,
     'room_mode': "Typical Classroom",
     'sim_pc_w': 150,
     'sim_proj_w': 300,
@@ -40,6 +41,15 @@ DEFAULT_STATE = {
 for key, default_value in DEFAULT_STATE.items():
     if key not in st.session_state:
         st.session_state[key] = default_value
+
+# --- SYSTEM SHUTDOWN HANDLER ---
+if st.session_state.is_shutdown:
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
+    st.error("### 🛑 SYSTEM OFFLINE\nThe Decision Support System has been safely shut down.")
+    if st.button("Initialize Reboot Sequence", type="primary"):
+        st.session_state.clear()
+        st.rerun()
+    st.stop()
 
 # --- 3. HARDWARE CONSTANTS & ACTIVE OVERRIDES ---
 ANNUAL_HOURS = 10 * 264 
@@ -78,10 +88,13 @@ def get_auto_fan_mode(occ, tmp, fuzzy_out):
     else:
         return "Mode 1"
 
-def toggle_admin(): 
-    st.session_state.show_admin = not st.session_state.show_admin
-    
-    if st.session_state.show_admin:
+def exit_admin(): 
+    st.session_state.show_admin = False
+
+def authenticate_admin(usr, pwd):
+    if usr == "admin" and pwd == "admin123":
+        st.session_state.show_admin = True
+        
         occ = st.session_state.in_occ
         tmp = st.session_state.in_tmp
         
@@ -98,6 +111,8 @@ def toggle_admin():
         auto_mode = get_auto_fan_mode(occ, tmp, out_val)
         st.session_state.admin_f1 = auto_mode
         st.session_state.admin_f2 = auto_mode
+        return True
+    return False
 
 def reset_admin_defaults():
     override_keys = ['sim_pc_w', 'sim_proj_w', 'sim_light_w', 'sim_fan_w', 'sim_rate']
@@ -140,6 +155,30 @@ def click_cycle_f2():
     curr = st.session_state.admin_f2
     next_idx = (modes.index(curr) + 1) % 4 if curr in modes else 0
     st.session_state.admin_f2 = modes[next_idx]
+
+@st.dialog("System Override Access")
+def login_modal():
+    st.markdown("Enter your credentials to unlock manual overrides.")
+    login_user = st.text_input("Username", key="login_u")
+    login_pass = st.text_input("Password", type="password", key="login_p")
+    
+    if st.button("Authenticate", use_container_width=True):
+        if authenticate_admin(login_user, login_pass):
+            st.rerun()
+        else:
+            st.error("Invalid credentials.")
+
+@st.dialog("📖 User Guide & System Overview")
+def show_user_guide():
+    st.markdown("### How to Use the Dashboard")
+    st.markdown("""
+    * **Configuration (Left):** Adjust the slider parameters to simulate real-world conditions (e.g., number of students, room temperature, operating hours). 
+    * **Consumption & Recommendations (Center):** Monitor the difference between the baseline (max capacity) power draw and the optimal power draw. Follow the badge recommendations to adjust physical room hardware.
+    * **Analytics (Right):** Track efficiency and cost reduction rate (CRR) visually over time.
+    """)
+    
+    st.markdown("### System Overrides")
+    st.markdown("If manual intervention is required, click **Enter Admin Mode** to authenticate. Once unlocked, you can forcefully toggle light switches, cycle fan modes, and adjust utility rate baselines.")
 
 # --- 5. PREMIUM CSS STYLING ---
 st.markdown("""
@@ -198,7 +237,8 @@ st.markdown("""
         box-shadow: 0px 10px 30px rgba(0,0,0,0.7) !important;
     }
 
-    div[data-testid="element-container"]:has(.btn-light) + div[data-testid="element-container"] button {
+    div[data-testid="element-container"]:has(.btn-light) + div[data-testid="element-container"] button,
+    div[data-testid="stElementContainer"]:has(.btn-light) + div[data-testid="stElementContainer"] button {
         border-radius: 50% 50% 25% 25% !important; 
         height: 100px !important;
         width: 100% !important;
@@ -211,7 +251,8 @@ st.markdown("""
         transition: all 0.3s ease !important;
     }
 
-    div[data-testid="element-container"]:has(.btn-fan) + div[data-testid="element-container"] button {
+    div[data-testid="element-container"]:has(.btn-fan) + div[data-testid="element-container"] button,
+    div[data-testid="stElementContainer"]:has(.btn-fan) + div[data-testid="stElementContainer"] button {
         border-radius: 50% !important; 
         height: 100px !important;
         width: 100% !important;
@@ -224,28 +265,32 @@ st.markdown("""
         transition: all 0.3s ease !important;
     }
 
-    div[data-testid="element-container"]:has(.btn-light) + div button:has(p:contains("ON")) {
+    div[data-testid="element-container"]:has(.btn-light) + div button:has(p:contains("ON")),
+    div[data-testid="stElementContainer"]:has(.btn-light) + div button:has(p:contains("ON")) {
         background: rgba(255, 202, 40, 0.15) !important;
         border: 2px solid rgba(255, 202, 40, 0.6) !important;
         box-shadow: 0 0 10px rgba(255, 202, 40, 0.2) !important;
         color: #ffca28 !important;
     }
     
-    div[data-testid="element-container"]:has(.btn-fan) + div button:has(p:contains("MODE 1")) {
+    div[data-testid="element-container"]:has(.btn-fan) + div button:has(p:contains("MODE 1")),
+    div[data-testid="stElementContainer"]:has(.btn-fan) + div button:has(p:contains("MODE 1")) {
         background: rgba(74, 222, 128, 0.15) !important;
         border: 2px solid rgba(74, 222, 128, 0.6) !important;
         box-shadow: 0 0 10px rgba(74, 222, 128, 0.2) !important;
         color: #4ade80 !important;
     }
 
-    div[data-testid="element-container"]:has(.btn-fan) + div button:has(p:contains("MODE 2")) {
+    div[data-testid="element-container"]:has(.btn-fan) + div button:has(p:contains("MODE 2")),
+    div[data-testid="stElementContainer"]:has(.btn-fan) + div button:has(p:contains("MODE 2")) {
         background: rgba(255, 202, 40, 0.15) !important;
         border: 2px solid rgba(255, 202, 40, 0.6) !important;
         box-shadow: 0 0 10px rgba(255, 202, 40, 0.2) !important;
         color: #ffca28 !important;
     }
 
-    div[data-testid="element-container"]:has(.btn-fan) + div button:has(p:contains("MODE 3")) {
+    div[data-testid="element-container"]:has(.btn-fan) + div button:has(p:contains("MODE 3")),
+    div[data-testid="stElementContainer"]:has(.btn-fan) + div button:has(p:contains("MODE 3")) {
         background: rgba(255, 107, 107, 0.15) !important;
         border: 2px solid rgba(255, 107, 107, 0.6) !important;
         box-shadow: 0 0 10px rgba(255, 107, 107, 0.2) !important;
@@ -253,7 +298,9 @@ st.markdown("""
     }
 
     div[data-testid="element-container"]:has(.btn-light) + div button:has(p:contains("OFF")),
-    div[data-testid="element-container"]:has(.btn-fan) + div button:has(p:contains("OFF")) {
+    div[data-testid="element-container"]:has(.btn-fan) + div button:has(p:contains("OFF")),
+    div[data-testid="stElementContainer"]:has(.btn-light) + div button:has(p:contains("OFF")),
+    div[data-testid="stElementContainer"]:has(.btn-fan) + div button:has(p:contains("OFF")) {
         background: rgba(38,39,48,0.8) !important;
         border: 2px solid #464b5d !important;
         color: #888888 !important;
@@ -261,7 +308,9 @@ st.markdown("""
     }
     
     div[data-testid="element-container"]:has(.btn-light) + div button p,
-    div[data-testid="element-container"]:has(.btn-fan) + div button p {
+    div[data-testid="element-container"]:has(.btn-fan) + div button p,
+    div[data-testid="stElementContainer"]:has(.btn-light) + div button p,
+    div[data-testid="stElementContainer"]:has(.btn-fan) + div button p {
         font-size: 1.0rem !important;
         font-weight: 700 !important;
         line-height: 1.2 !important;
@@ -298,7 +347,7 @@ st.markdown("""
     h3 { margin-bottom: 0rem !important; padding-bottom: 0.2rem !important; }
     h4 { margin-bottom: 0rem !important; padding-bottom: 0.5rem !important; font-weight: 700 !important; letter-spacing: 1px;}
     
-    p, .stMarkdown p { font-size: 1.5rem !important; }
+    p, .stMarkdown p, li { font-size: 1.5rem !important; line-height: 1.6 !important; }
     label, div[data-testid="stWidgetLabel"] p, .stRadio label p {
         font-size: 1.2rem !important; font-weight: 600 !important; 
     }
@@ -309,7 +358,146 @@ st.markdown("""
     }
     div[data-testid="stMetricLabel"] p { font-size: 1.0rem !important; font-weight: 400 !important; }
     div[data-testid="stMetricDelta"] p { font-size: 0.9rem !important; font-weight: 600 !important; }
-    div[data-baseweb="slider"] * { font-size: 0.9rem !important; font-weight: 400 !important; }
+    /* ====================================================================
+       Slider Tweaks (The Nuke Option for Overlaps)
+       ==================================================================== */
+    /* 1. Prevent our global font sizes from breaking the slider container */
+    .stSlider * {
+        line-height: 1 !important;
+    }
+
+    /* 2. Force the slider track down to create physical space */
+    .stSlider > div[data-baseweb="slider"] {
+        margin-top: 40px !important; 
+    }
+
+    /* 3. Lock the thumb number strictly above the line */
+    .stSlider div[role="slider"] > div {
+        position: absolute !important;
+        bottom: 40px !important; 
+        top: auto !important; 
+        font-size: 1.2rem !important;
+        font-weight: 800 !important;
+        color: #ff6b6b !important;
+    }
+
+    /* 4. Lock the min/max limits above the line */
+    .stSlider div[data-baseweb="slider"] > div > div > div > p,
+    .stSlider div[data-baseweb="slider"] > div > div > p {
+        position: absolute !important;
+        bottom: 25px !important;
+        top: auto !important;
+        font-weight: 600 !important;
+    }
+
+    /* ====================================================================
+       1. Admin Mode Lowkey Button (Ghost Effect)
+       ==================================================================== */
+    div[data-testid="element-container"]:has(.lowkey-admin) + div[data-testid="element-container"] button,
+    div[data-testid="stElementContainer"]:has(.lowkey-admin) + div[data-testid="stElementContainer"] button {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        transition: all 0.3s ease !important;
+    }
+    div[data-testid="element-container"]:has(.lowkey-admin) + div[data-testid="element-container"] button p,
+    div[data-testid="element-container"]:has(.lowkey-admin) + div[data-testid="element-container"] button span,
+    div[data-testid="stElementContainer"]:has(.lowkey-admin) + div[data-testid="stElementContainer"] button p,
+    div[data-testid="stElementContainer"]:has(.lowkey-admin) + div[data-testid="stElementContainer"] button span {
+        color: rgba(255, 255, 255, 0.7) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    div[data-testid="element-container"]:has(.lowkey-admin) + div[data-testid="element-container"] button:hover,
+    div[data-testid="stElementContainer"]:has(.lowkey-admin) + div[data-testid="stElementContainer"] button:hover {
+        background-color: rgba(255, 255, 255, 1) !important;
+        background: rgba(255, 255, 255, 1) !important;
+        border: 1px solid rgba(255, 255, 255, 1) !important;
+    }
+    div[data-testid="element-container"]:has(.lowkey-admin) + div[data-testid="element-container"] button:hover p,
+    div[data-testid="element-container"]:has(.lowkey-admin) + div[data-testid="element-container"] button:hover span,
+    div[data-testid="stElementContainer"]:has(.lowkey-admin) + div[data-testid="stElementContainer"] button:hover p,
+    div[data-testid="stElementContainer"]:has(.lowkey-admin) + div[data-testid="stElementContainer"] button:hover span {
+        color: #1a1b21 !important;
+    }
+
+    /* ====================================================================
+       2. Terminate Session Lowkey Button (Ghost Effect)
+       ==================================================================== */
+    div[data-testid="element-container"]:has(.lowkey-shutdown) + div[data-testid="element-container"] button,
+    div[data-testid="stElementContainer"]:has(.lowkey-shutdown) + div[data-testid="stElementContainer"] button {
+        background-color: rgba(255, 107, 107, 0.05) !important;
+        background: rgba(255, 107, 107, 0.05) !important;
+        border: 1px dashed rgba(255, 107, 107, 0.4) !important;
+        box-shadow: none !important;
+        padding: 5px !important;
+        min-height: 35px !important;
+        height: 35px !important;
+        transition: all 0.3s ease !important;
+    }
+    div[data-testid="element-container"]:has(.lowkey-shutdown) + div[data-testid="element-container"] button p,
+    div[data-testid="element-container"]:has(.lowkey-shutdown) + div[data-testid="element-container"] button span,
+    div[data-testid="stElementContainer"]:has(.lowkey-shutdown) + div[data-testid="stElementContainer"] button p,
+    div[data-testid="stElementContainer"]:has(.lowkey-shutdown) + div[data-testid="stElementContainer"] button span {
+        color: rgba(255, 107, 107, 0.7) !important;
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+        letter-spacing: 1px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    div[data-testid="element-container"]:has(.lowkey-shutdown) + div[data-testid="element-container"] button:hover,
+    div[data-testid="stElementContainer"]:has(.lowkey-shutdown) + div[data-testid="stElementContainer"] button:hover {
+        background-color: rgba(255, 107, 107, 1) !important;
+        background: rgba(255, 107, 107, 1) !important;
+        border: 1px solid rgba(255, 107, 107, 1) !important;
+        box-shadow: 0 0 15px rgba(255, 107, 107, 0.4) !important;
+    }
+    div[data-testid="element-container"]:has(.lowkey-shutdown) + div[data-testid="element-container"] button:hover p,
+    div[data-testid="element-container"]:has(.lowkey-shutdown) + div[data-testid="element-container"] button:hover span,
+    div[data-testid="stElementContainer"]:has(.lowkey-shutdown) + div[data-testid="stElementContainer"] button:hover p,
+    div[data-testid="stElementContainer"]:has(.lowkey-shutdown) + div[data-testid="stElementContainer"] button:hover span {
+        color: #ffffff !important;
+        letter-spacing: 3px !important;
+    }
+
+    /* ====================================================================
+       3. User Guide Lowkey Button (Ghost Effect)
+       ==================================================================== */
+    div[data-testid="element-container"]:has(.lowkey-guide) + div[data-testid="element-container"] button,
+    div[data-testid="stElementContainer"]:has(.lowkey-guide) + div[data-testid="stElementContainer"] button {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        height: 40px !important;
+        width: 40px !important;
+        border-radius: 50% !important;
+        float: right;
+        transition: all 0.3s ease !important;
+    }
+    div[data-testid="element-container"]:has(.lowkey-guide) + div[data-testid="element-container"] button p,
+    div[data-testid="element-container"]:has(.lowkey-guide) + div[data-testid="element-container"] button span,
+    div[data-testid="stElementContainer"]:has(.lowkey-guide) + div[data-testid="stElementContainer"] button p,
+    div[data-testid="stElementContainer"]:has(.lowkey-guide) + div[data-testid="stElementContainer"] button span {
+        color: rgba(255, 255, 255, 0.7) !important;
+        font-size: 1.2rem !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    div[data-testid="element-container"]:has(.lowkey-guide) + div[data-testid="element-container"] button:hover,
+    div[data-testid="stElementContainer"]:has(.lowkey-guide) + div[data-testid="stElementContainer"] button:hover {
+        background-color: rgba(255, 255, 255, 1) !important;
+        background: rgba(255, 255, 255, 1) !important;
+        border: 1px solid rgba(255, 255, 255, 1) !important;
+    }
+    div[data-testid="element-container"]:has(.lowkey-guide) + div[data-testid="element-container"] button:hover p,
+    div[data-testid="element-container"]:has(.lowkey-guide) + div[data-testid="element-container"] button:hover span,
+    div[data-testid="stElementContainer"]:has(.lowkey-guide) + div[data-testid="stElementContainer"] button:hover p,
+    div[data-testid="stElementContainer"]:has(.lowkey-guide) + div[data-testid="stElementContainer"] button:hover span {
+        color: #1a1b21 !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -342,14 +530,20 @@ def build_fuzzy_engine():
 energy_ctrl, energy_rec = build_fuzzy_engine()
 sim = ctrl.ControlSystemSimulation(energy_ctrl)
 
-# --- 7. MAIN SCREEN: LOGO & TITLES ---
+# --- 7. MAIN SCREEN: LOGO, TITLES & GUIDE ---
 try:
     st.image("UC_Official_Logo.png", width=350) 
 except FileNotFoundError:
     pass
 
-st.markdown('<p class="brand-text">ECOLOGIC DSS</p>', unsafe_allow_html=True)
-st.markdown('<h1 class="main-title">Energy Usage Calculator</h1>', unsafe_allow_html=True)
+c_title, c_guide = st.columns([15, 1], vertical_alignment="bottom")
+with c_title:
+    st.markdown('<p class="brand-text">ECOLOGIC DSS</p>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-title" style="margin-top: -15px;">Energy Usage Calculator</h1>', unsafe_allow_html=True)
+with c_guide:
+    st.markdown('<div class="lowkey-guide"></div>', unsafe_allow_html=True)
+    if st.button("?", key="guide_btn", help="User Guide"):
+        show_user_guide()
 
 # --- 8. MAIN LAYOUT ---
 col_in, col_mid, col_out = st.columns([1, 1.2, 1.6], gap="medium")
@@ -362,10 +556,9 @@ with col_in:
     
     room_type = st.radio("Mode:", ["Typical Classroom", "Computer Lab"], horizontal=True, key="room_mode")
     proj_override = st.toggle("Projector Active", key="proj_on")
-    in_occ = st.slider("Students", 0, 40, key="in_occ") 
+    in_occ = st.slider("Students", 0, 45, key="in_occ") 
     in_tmp = st.slider("Temp (°C)", 20, 40, key="in_tmp") 
     
-    # NEW: Hours input replacing the hardcoded 220 hours
     in_hours = st.number_input("Operating Hours", min_value=1.0, max_value=720.0, step=0.5, key="in_hours")
 
     num_pcs = 0 
@@ -381,11 +574,14 @@ with col_in:
 
     st.markdown("<br>", unsafe_allow_html=True) 
     
-    # --- ADMIN CONTROLS ---
+    # --- ADMIN CONTROLS WITH MODAL LOGIN ---
     if not st.session_state.show_admin:
-        st.button(":material/lock: Enter Admin Mode", on_click=toggle_admin, use_container_width=True)
+        st.markdown('<div class="lowkey-admin"></div>', unsafe_allow_html=True)
+        if st.button(":material/lock: Enter Admin Mode", use_container_width=True):
+            login_modal()
     else:
-        st.button(":material/logout: Exit Admin Mode", on_click=toggle_admin, use_container_width=True)
+        st.markdown('<div class="lowkey-admin"></div>', unsafe_allow_html=True)
+        st.button(":material/logout: Exit Admin Mode", on_click=exit_admin, use_container_width=True)
         
         with st.popover(":material/settings: Admin Controls", use_container_width=True):
             
@@ -538,7 +734,6 @@ opt_pc_load = opt_pc_count * W_PC
 active_w = draw_lights + draw_fans + opt_proj_w + opt_pc_load
 peak_w = max(1, (W_S1 + W_S2) + W_FANS_TOTAL + (W_PROJ if proj_override else 0) + (num_pcs * W_PC))
 
-# NEW: Calculations dynamically using the in_hours parameter
 monthly_base_php = (peak_w / 1000 * in_hours * ACTIVE_RATE)
 Energy_draw_php = (active_w / 1000 * in_hours * ACTIVE_RATE)
 savings_php = max(0, monthly_base_php - Energy_draw_php)
@@ -582,7 +777,6 @@ with col_mid:
     m3.metric("Saved", f"{watt_savings}W", delta=f"{watt_savings}W Drop", delta_color="normal")
     
     m4, m5, m6 = st.columns(3)
-    # NEW: Updated formatting to accommodate precise smaller hourly rates
     m4.metric("Baseline ₱  ", f"₱{monthly_base_php:,.2f}")
     m5.metric("Optimal ₱ ", f"₱{Energy_draw_php:,.2f}")
     m6.metric("Saved ₱", f"₱{savings_php:,.2f}", delta=f"₱{savings_php:,.2f} Saved", delta_color="normal")
@@ -687,12 +881,20 @@ with col_out:
     
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-# --- 10. MINIMAL LOWKEY LEGEND (REVERTED TO COLORED CIRCLES) ---
+# --- 10. MINIMAL LOWKEY LEGEND ---
 st.markdown("""
-    <div style='text-align: center; opacity: 0.6; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;'>
+    <div style='text-align: center; opacity: 0.6; margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;'>
         <span class='legend-badge-mini' style='color: #ff6b6b;'>🔴 Critical / Active Waste</span> &nbsp;&nbsp; 
         <span class='legend-badge-mini' style='color: #ffca28;'>🟡 Caution / Override Active</span> &nbsp;&nbsp; 
         <span class='legend-badge-mini' style='color: #4ade80;'>🟢 Optimal Efficiency</span> &nbsp;&nbsp; 
         <span class='legend-badge-mini' style='color: #60a5fa;'>🔵 System Standby</span> 
     </div>
     """, unsafe_allow_html=True)
+
+# --- 11. CENTERED LOWKEY SHUTDOWN (INTERACTIVE) ---
+_, center_btn, _ = st.columns([1, 1, 1])
+with center_btn:
+    st.markdown('<div class="lowkey-shutdown"></div>', unsafe_allow_html=True)
+    if st.button("Terminate Session", key="shutdown_btn", use_container_width=True):
+        st.session_state.is_shutdown = True
+        st.rerun()
